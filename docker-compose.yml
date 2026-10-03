@@ -1,0 +1,22 @@
+services:
+  mongodb:
+    image: mongo:8
+    container_name: mongodb
+    ports:
+      - '27017:27017'
+    volumes:
+      - ./data/mongodb:/data/db
+  
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    restart: unless-stopped
+    depends_on:
+      - mongodb
+    environment:
+      ME_CONFIG_MONGODB_URL: mongodb://mongodb:27017
+      ME_CONFIG_BASICAUTH_ENABLED: 'true'
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: admin
+    ports:
+      - '8081:8081'
