@@ -1,4 +1,8 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { CreateUserInput } from './contract/command/create-user-input.dto.js';
 import { GetUserArgs } from './contract/query/get-user-args.dto.js';
 import { UserRepository } from './users.repository.js';
@@ -15,20 +19,47 @@ export class UsersService {
   }
 
   async createUser(createUserInput: CreateUserInput) {
-    await this.validateEmail(createUserInput);
+    const email = createUserInput.email.trim().toLowerCase();
+    await this.validateEmail(email);
 
-    const user = await this.userRepository.create({
-      ...createUserInput,
-    });
+    try {
+      const user = await this.userRepository.create({
+        ...createUserInput,
+        email,
+      });
 
-    return this.toModel(user);
+      return this.toModel(user);
+    } catch (error) {
+      // The unique index is the final guard against simultaneous requests.
+      if (this.isDuplicateKeyError(error)) {
+        throw new UnprocessableEntityException('Email already exists');
+      }
+
+      throw error;
+    }
   }
 
-  private async validateEmail(createUserInput: CreateUserInput) {
+  private async validateEmail(email: string) {
     try {
-      await this.userRepository.findOne({ email: createUserInput.email });
-      throw new UnprocessableEntityException('Email already exists');
-    } catch (err) {}
+      await this.userRepository.findOne({ email });
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        return;
+      }
+
+      throw error;
+    }
+
+    throw new UnprocessableEntityException('Email already exists');
+  }
+
+  private isDuplicateKeyError(error: unknown): boolean {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 11000
+    );
   }
 
   private toModel(userDocument: UserDocument): User {
