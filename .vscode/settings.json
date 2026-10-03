@@ -1,0 +1,10 @@
+{
+  "ollamaCodeCompletions.serverUrl": "http://localhost:11434",
+  "ollamaCodeCompletions.model": "qwen2.5-coder:3b",
+  "ollamaCodeCompletions.enabled": true,
+  "ollamaCodeCompletions.debounceMs": 300,
+  "ollamaCodeCompletions.maxPrefixChars": 4096,
+  "ollamaCodeCompletions.maxSuffixChars": 1024,
+  "ollamaCodeCompletions.maxPredict": 128,
+  "ollamaCodeCompletions.timeoutSeconds": 30
+}
